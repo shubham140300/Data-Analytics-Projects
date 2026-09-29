@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from pathlib import Path
 
 
 # ---------------------------------------------------------
@@ -20,9 +21,13 @@ st.set_page_config(
 
 @st.cache_data
 def load_data():
-    df = pd.read_excel("ml_predictions.xlsx")
 
-    # Clean column names
+    # Load Excel file from the same folder as app.py
+    file_path = Path(__file__).parent / "ml_predictions.xlsx"
+
+    df = pd.read_excel(file_path)
+
+    # Standardize column names
     df.columns = (
         df.columns
         .astype(str)
@@ -38,7 +43,7 @@ df = load_data()
 
 
 # ---------------------------------------------------------
-# REQUIRED COLUMNS
+# REQUIRED COLUMNS CHECK
 # ---------------------------------------------------------
 
 required_columns = [
@@ -51,14 +56,11 @@ required_columns = [
 ]
 
 missing_columns = [
-    col for col in required_columns
+    col
+    for col in required_columns
     if col not in df.columns
 ]
 
-
-# ---------------------------------------------------------
-# DATA VALIDATION
-# ---------------------------------------------------------
 
 if missing_columns:
 
@@ -92,6 +94,7 @@ df["predicted_high_risk"] = (
     .astype(int)
 )
 
+
 for column in [
     "priority",
     "operating_system",
@@ -107,7 +110,7 @@ for column in [
 
 
 # ---------------------------------------------------------
-# TITLE
+# DASHBOARD TITLE
 # ---------------------------------------------------------
 
 st.markdown(
@@ -131,22 +134,34 @@ st.sidebar.header("Dashboard Filters")
 
 environment_filter = st.sidebar.multiselect(
     "Environment",
-    options=sorted(df["environment"].dropna().unique()),
-    default=sorted(df["environment"].dropna().unique())
+    options=sorted(
+        df["environment"].dropna().unique()
+    ),
+    default=sorted(
+        df["environment"].dropna().unique()
+    )
 )
 
 
 os_filter = st.sidebar.multiselect(
     "Operating System",
-    options=sorted(df["operating_system"].dropna().unique()),
-    default=sorted(df["operating_system"].dropna().unique())
+    options=sorted(
+        df["operating_system"].dropna().unique()
+    ),
+    default=sorted(
+        df["operating_system"].dropna().unique()
+    )
 )
 
 
 priority_filter = st.sidebar.multiselect(
     "Priority",
-    options=sorted(df["priority"].dropna().unique()),
-    default=sorted(df["priority"].dropna().unique())
+    options=sorted(
+        df["priority"].dropna().unique()
+    ),
+    default=sorted(
+        df["priority"].dropna().unique()
+    )
 )
 
 
@@ -181,6 +196,7 @@ filtered_df = df[
 # ---------------------------------------------------------
 
 total_servers = filtered_df["server_id"].count()
+
 
 high_risk_servers = filtered_df[
     filtered_df["predicted_high_risk"] == 1
@@ -242,15 +258,11 @@ risk_df = filtered_df[
 
 
 # ---------------------------------------------------------
-# ROW 1 — PRIORITY + OPERATING SYSTEM
+# PREDICTED HIGH-RISK BY PRIORITY
 # ---------------------------------------------------------
 
 col1, col2 = st.columns(2)
 
-
-# ---------------------------------------------------------
-# PRIORITY CHART
-# ---------------------------------------------------------
 
 with col1:
 
@@ -258,12 +270,15 @@ with col1:
         risk_df
         .groupby("priority")
         .size()
-        .reset_index(name="predicted_high_risk")
+        .reset_index(
+            name="predicted_high_risk"
+        )
         .sort_values(
             "predicted_high_risk",
             ascending=False
         )
     )
+
 
     fig_priority = px.bar(
         priority_data,
@@ -276,10 +291,12 @@ with col1:
         }
     )
 
+
     fig_priority.update_layout(
         height=400,
         showlegend=False
     )
+
 
     st.plotly_chart(
         fig_priority,
@@ -288,7 +305,7 @@ with col1:
 
 
 # ---------------------------------------------------------
-# OPERATING SYSTEM CHART
+# PREDICTED HIGH-RISK BY OPERATING SYSTEM
 # ---------------------------------------------------------
 
 with col2:
@@ -297,12 +314,15 @@ with col2:
         risk_df
         .groupby("operating_system")
         .size()
-        .reset_index(name="predicted_high_risk")
+        .reset_index(
+            name="predicted_high_risk"
+        )
         .sort_values(
             "predicted_high_risk",
             ascending=False
         )
     )
+
 
     fig_os = px.pie(
         os_data,
@@ -312,9 +332,11 @@ with col2:
         title="Predicted High-Risk Servers by Operating System"
     )
 
+
     fig_os.update_layout(
         height=400
     )
+
 
     st.plotly_chart(
         fig_os,
@@ -323,15 +345,11 @@ with col2:
 
 
 # ---------------------------------------------------------
-# ROW 2 — ENVIRONMENT + INCIDENT CATEGORY
+# PREDICTED HIGH-RISK BY ENVIRONMENT
 # ---------------------------------------------------------
 
 col1, col2 = st.columns(2)
 
-
-# ---------------------------------------------------------
-# ENVIRONMENT CHART
-# ---------------------------------------------------------
 
 with col1:
 
@@ -339,12 +357,15 @@ with col1:
         risk_df
         .groupby("environment")
         .size()
-        .reset_index(name="predicted_high_risk")
+        .reset_index(
+            name="predicted_high_risk"
+        )
         .sort_values(
             "predicted_high_risk",
             ascending=False
         )
     )
+
 
     fig_environment = px.bar(
         environment_data,
@@ -357,10 +378,12 @@ with col1:
         }
     )
 
+
     fig_environment.update_layout(
         height=450,
         showlegend=False
     )
+
 
     st.plotly_chart(
         fig_environment,
@@ -369,7 +392,7 @@ with col1:
 
 
 # ---------------------------------------------------------
-# INCIDENT CATEGORY CHART
+# PREDICTED HIGH-RISK BY INCIDENT CATEGORY
 # ---------------------------------------------------------
 
 with col2:
@@ -378,12 +401,15 @@ with col2:
         risk_df
         .groupby("incident_category")
         .size()
-        .reset_index(name="predicted_high_risk")
+        .reset_index(
+            name="predicted_high_risk"
+        )
         .sort_values(
             "predicted_high_risk",
             ascending=False
         )
     )
+
 
     fig_incident = px.bar(
         incident_data,
@@ -397,10 +423,12 @@ with col2:
         }
     )
 
+
     fig_incident.update_layout(
         height=450,
         showlegend=False
     )
+
 
     st.plotly_chart(
         fig_incident,
@@ -409,17 +437,19 @@ with col2:
 
 
 # ---------------------------------------------------------
-# DATA SUMMARY
+# FILTERED DATA SUMMARY
 # ---------------------------------------------------------
 
 st.markdown("---")
 
 st.subheader("Filtered Data Summary")
 
+
 st.write(
     f"Showing **{len(filtered_df):,}** records "
     f"after applying the selected filters."
 )
+
 
 st.dataframe(
     filtered_df,
