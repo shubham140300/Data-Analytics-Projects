@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ parameter.name }} worksheet row{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">{{ sheet_name }} · MASTER WORKBOOK</p><h1>Edit Excel row {{ row.source_row }}</h1><p class="page-subtitle">Changes write to the original master workbook and then refresh the snapshots used by the dashboard.</p></div><a class="button button-secondary" href="{% url 'parameter_data' parameter.id %}">Back to {{ parameter.name }}</a></div>
+<div class="notice notice-info"><span class="notice-icon" aria-hidden="true">i</span><div><strong>Formula cells are protected</strong><p>Formula-driven cells are read only. Last Updated and Changes Made By fields, when present, are filled automatically.</p></div></div>
+<section class="panel source-edit-panel"><form method="post" class="stacked-form source-edit-form">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error-box">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+  <div class="source-editor-grid">
+    {% for field in form.source_fields %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-mark">*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}
+    <div class="form-field actor-field"><label for="{{ form.changed_by.id_for_label }}">{{ form.changed_by.label }}</label>{{ form.changed_by }}<small>{{ form.changed_by.help_text }}</small></div>
+  </div>
+  {% if form.readonly_columns %}<div class="managed-columns"><strong>Formula-driven columns · read only</strong><dl>{% for heading,value in form.readonly_columns %}<div><dt>{{ heading }}</dt><dd>{{ value|default:"Calculated by Excel" }}</dd></div>{% endfor %}</dl></div>{% endif %}
+  {% if form.managed_columns %}<div class="managed-columns"><strong>Updated automatically when you save</strong><dl>{% for heading,value in form.managed_columns %}<div><dt>{{ heading }}</dt><dd>{{ value|default:"Will be filled on save" }}</dd></div>{% endfor %}</dl></div>{% endif %}
+  <div class="form-actions"><button class="button button-primary" type="submit">Save row to Excel</button><a class="button button-quiet" href="{% url 'parameter_data' parameter.id %}">Cancel</a></div>
+</form></section>
+{% endblock %}

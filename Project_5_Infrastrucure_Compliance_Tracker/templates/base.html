@@ -1,0 +1,56 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8f6">
+  <title>{% block title %}TechCompliance{% endblock %} · TechCompliance</title>
+  <link rel="stylesheet" href="{% static 'website/css/styles.css' %}">
+</head>
+<body class="{% if not workspace_permissions.execute %}no-execute{% endif %} {% if not workspace_permissions.write %}no-write{% endif %}">
+  <header class="app-header">
+    <a class="brand" href="{% url 'dashboard' %}">
+      <span class="brand-mark" aria-hidden="true">T</span>
+      <span class="brand-name">Tech<span>Compliance</span></span>
+    </a>
+    {% if workspace_user_id %}<nav class="main-nav" aria-label="Main navigation">
+      <a class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Overview</a>
+      <a class="{% if request.resolver_match.url_name == 'servers' or request.resolver_match.url_name == 'server_detail' %}active{% endif %}" href="{% url 'servers' %}">Servers</a>
+      <a class="{% if request.resolver_match.url_name == 'non_compliant' %}active{% endif %}" href="{% url 'non_compliant' %}">Non-compliant</a>
+      <a class="{% if request.resolver_match.url_name == 'parameters' %}active{% endif %}" href="{% url 'parameters' %}">Parameters</a>
+      <a class="{% if request.resolver_match.url_name == 'compliance_summary' %}active{% endif %}" href="{% url 'compliance_summary' %}">Compliance summary</a>
+      <a class="{% if request.resolver_match.url_name == 'imports' or request.resolver_match.url_name == 'imports_new' or request.resolver_match.url_name == 'imports_master' or request.resolver_match.url_name == 'import_detail' %}active{% endif %}" href="{% url 'imports' %}">Imports</a>
+      <a class="{% if request.resolver_match.url_name == 'history' %}active{% endif %}" href="{% url 'history' %}">Data</a>
+    </nav>{% endif %}
+    {% if workspace_user_id %}<details class="profile-menu">
+      <summary>Profile</summary>
+      <div class="profile-dropdown">
+        <div class="profile-identity">
+          <span>{% if workspace_is_owner %}Owner{% else %}User{% endif %}</span>
+          <strong>{{ workspace_username }}</strong>
+          {% if workspace_username != workspace_user_id %}<small>ID {{ workspace_user_id }}</small>{% endif %}
+        </div>
+        <a href="{% url 'password_change' %}">Change password</a>
+        {% if workspace_is_owner %}<a href="{% url 'access_control' %}">Access &amp; columns</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+      </div>
+    </details>{% endif %}
+    <a class="header-action" href="{% url 'imports_new' %}"><span aria-hidden="true">＋</span> Import data</a>
+  </header>
+
+  <main class="page-shell">
+    {% if messages %}
+      <div class="messages" aria-live="polite">
+        {% for message in messages %}<div class="message message-{{ message.tags }}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="app-footer">
+    <span>Local TechCompliance workspace</span>
+    <span>Workbook edits can sync to the original local file</span>
+  </footer>
+</body>
+</html>

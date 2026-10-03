@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Workspace access{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">OWNER CONSOLE</p><h1>Workspace access</h1><p class="page-subtitle">Only owner ID {{ workspace_owner_id }} can grant access. Set Read, Write, and Execute separately for each parameter.</p></div>
+<div class="content-grid access-grid">
+  <section class="panel form-panel access-matrix-panel">
+    <div class="panel-heading"><div><p class="eyebrow">PARAMETER PERMISSIONS</p><h2>{% if editing_grant %}Edit user {{ editing_grant.user_id }}{% else %}Grant a user access{% endif %}</h2><p class="section-subtitle">Create a username and password, then select access by parameter. Write and Execute require Read.</p></div></div>
+    <form method="post" class="stacked-form access-form">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error-box">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="access-identity-fields">
+        {% for field in form %}{% if field.name == "user_id" or field.name == "username" or field.name == "password" %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-mark">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}{% endfor %}
+      </div>
+      <label class="access-choice">{{ form.is_active }}<span><strong>{{ form.is_active.label }}</strong><small>Turn off access without deleting the grant.</small></span></label>
+      <div class="table-wrap access-matrix-wrap"><table class="access-matrix"><thead><tr><th>Parameter</th><th>Read</th><th>Write</th><th>Execute</th></tr></thead><tbody>
+        {% for group in form.permission_groups %}<tr><th>{{ group.parameter.name }}</th><td><label class="matrix-check">{{ group.read }}<span class="visually-hidden">Read {{ group.parameter.name }}</span></label></td><td><label class="matrix-check">{{ group.write }}<span class="visually-hidden">Write {{ group.parameter.name }}</span></label></td><td><label class="matrix-check">{{ group.execute }}<span class="visually-hidden">Execute {{ group.parameter.name }}</span></label></td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="form-actions"><button type="submit" class="button button-primary">Save access</button>{% if editing_grant %}<a class="button button-quiet" href="{% url 'access_control' %}">Cancel edit</a>{% endif %}</div>
+    </form>
+  </section>
+  <aside class="side-note"><h2>Permission guide</h2><ul><li><strong>Read</strong> opens that parameter's chart, worksheet, summary columns, and related records.</li><li><strong>Write</strong> edits rows for that parameter and writes changes to the master workbook.</li><li><strong>Execute</strong> imports data for that parameter and runs its permitted exports.</li><li>Blank username uses the user ID. The temporary password is <code>{{ default_password }}</code>; accounts must change it at first sign-in.</li><li>The owner controls workbook columns, full master imports, and access grants.</li><li>Access changes take effect on the user's next request.</li></ul></aside>
+</div>
+<section class="panel event-panel"><div class="panel-heading"><div><p class="eyebrow">APPROVED USERS</p><h2>Access grants</h2></div></div>
+  {% if grants %}<div class="table-wrap"><table><thead><tr><th>Username / User ID</th><th>Parameter grants</th><th>Status</th><th>Granted by</th><th>Actions</th></tr></thead><tbody>
+  {% for grant in grants %}<tr><td><strong>{{ grant.username }}</strong><span class="table-subline">{{ grant.user_id }}</span></td><td><div class="grant-chip-list">{% for permission in grant.parameter_permissions.all %}{% if permission.can_read or permission.can_write or permission.can_execute %}<span class="grant-chip"><b>{{ permission.parameter.name }}</b><span>{% if permission.can_read %}R{% endif %}{% if permission.can_write %}W{% endif %}{% if permission.can_execute %}X{% endif %}</span></span>{% endif %}{% empty %}<span class="quiet-text">No parameter grants</span>{% endfor %}</div></td><td>{% if grant.is_active %}<span class="status-pill status-completed">Active</span>{% else %}<span class="status-pill status-failed">Disabled</span>{% endif %}</td><td>{{ grant.granted_by|default:"—" }}</td><td class="access-actions"><a class="table-link" href="?user={{ grant.user_id }}">Edit</a>{% if grant.is_active %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="deactivate"><input type="hidden" name="user_id" value="{{ grant.user_id }}"><button class="text-button text-danger" type="submit">Revoke</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="quiet-empty">No additional user accounts have been approved.</p>{% endif %}
+</section>
+{% endblock %}

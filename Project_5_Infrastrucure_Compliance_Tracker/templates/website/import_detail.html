@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Import details{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">IMPORT DETAILS</p><h1>{{ batch.parameter.name }}</h1><p class="page-subtitle">Snapshot {{ batch.snapshot_date|date:"d F Y" }} · imported {{ batch.imported_at|date:"d M Y, H:i" }}</p></div><a class="button button-secondary" href="{% url 'imports' %}">← All imports</a></div>
+{% if batch.warning %}<div class="notice notice-warning"><span class="notice-icon" aria-hidden="true">!</span><div><strong>Review import notes</strong><p>{{ batch.warning }}</p></div></div>{% endif %}
+<section class="metric-grid import-metrics">
+  <article class="metric-card"><span class="metric-label">Source rows</span><strong>{{ batch.total_rows }}</strong><span class="metric-caption">From {{ batch.source_sheet }}</span></article>
+  <article class="metric-card"><span class="metric-label">Unique hosts</span><strong>{{ batch.unique_servers }}</strong><span class="metric-caption">Grouped by Host Name</span></article>
+  <article class="metric-card"><span class="metric-label">Exact duplicates</span><strong>{{ batch.duplicate_rows }}</strong><span class="metric-caption">Retained in source records</span></article>
+  <article class="metric-card metric-alert"><span class="metric-label">Unmapped statuses</span><strong>{{ batch.unmapped_status_rows }}</strong><span class="metric-caption">Excluded from compliant totals</span></article>
+</section>
+<div class="content-grid">
+  <section class="panel"><div class="panel-heading"><div><p class="eyebrow">SOURCE LABELS</p><h2>Status counts</h2></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Exact source label</th><th>Mapped status</th><th>Rows</th></tr></thead><tbody>{% for item in status_counts %}<tr><td>{{ item.raw_status|default:"(blank)" }}</td><td><span class="status-pill status-{{ item.mapped_status }}">{{ item.mapped_status|title }}</span></td><td>{{ item.row_count }}</td></tr>{% empty %}<tr><td colspan="3">No status values found.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+  <section class="panel"><div class="panel-heading"><div><p class="eyebrow">SOURCE FILE</p><h2>Workbook details</h2></div></div><dl class="detail-list"><div><dt>File</dt><dd>{{ batch.original_filename }}</dd></div><div><dt>Status column</dt><dd>{{ batch.status_column }}</dd></div><div><dt>Headings</dt><dd>{{ batch.source_columns|join:", " }}</dd></div><div><dt>Original upload fingerprint</dt><dd><code>{{ batch.file_sha256|slice:":16" }}…</code></dd></div><div><dt>Workbook</dt><dd>{% if can_download_workbook %}<a class="table-link" href="{% url 'download_workbook' batch.id %}">Download current workbook copy</a>{% elif is_master_workbook %}<a class="table-link" href="{% url 'parameter_data' batch.parameter.id %}">Open your parameter worksheet</a>{% else %}<span class="quiet-text">Download unavailable</span>{% endif %}</dd></div></dl></section>
+</div>
+<section class="panel event-panel"><div class="panel-heading"><div><p class="eyebrow">ROWS TO REVIEW</p><h2>Import issues</h2></div></div>
+  {% if issue_page.object_list %}<div class="table-wrap"><table><thead><tr><th>Excel row</th><th>Host name</th><th>IP address</th><th>Source status</th><th>Issue</th></tr></thead><tbody>{% for record in issue_page %}<tr><td>{{ record.source_row }}</td><td>{% if record.server %}<a class="table-link" href="{% url 'server_detail' record.server.id %}">{{ record.hostname }}</a>{% else %}{{ record.hostname|default:"—" }}{% endif %}</td><td>{{ record.ip_address|default:"—" }}</td><td>{{ record.raw_status|default:"—" }}</td><td>{% if record.issue %}{{ record.issue }}{% elif record.duplicate_row %}Exact duplicate row retained.{% endif %}</td></tr>{% endfor %}</tbody></table></div><div class="table-footer"><span>{{ issue_page.paginator.count }} rows to review</span>{% include "website/pagination.html" with page_obj=issue_page %}</div>
+  {% else %}<p class="quiet-empty">There are no rows with import issues.</p>{% endif %}
+</section>
+{% if workspace_permissions.write and not workspace_is_owner and can_edit_rows and issue_page.object_list %}<section class="panel"><div class="panel-heading"><div><p class="eyebrow">SOURCE ROWS</p><h2>Edit an issue row</h2></div></div><div class="editable-issue-links"><div>{% for record in issue_page %}<a class="table-link" href="{% url 'source_record_edit' record.id %}">Excel row {{ record.source_row }}</a>{% endfor %}</div></div></section>{% endif %}
+{% if workspace_is_owner and not is_master_workbook %}<section class="panel event-panel sync-target-panel"><div class="panel-heading"><div><p class="eyebrow">WORKBOOK WRITE-BACK</p><h2>Original workbook</h2><p class="section-subtitle">Web edits always update the copy saved by this app. Add the matching local path to also update the original file on this computer.</p></div></div>
+  <form class="sync-target-form" method="post" action="{% url 'set_import_sync_target' batch.id %}">{% csrf_token %}
+    <div class="form-field"><label for="{{ sync_target_form.sync_target_path.id_for_label }}">{{ sync_target_form.sync_target_path.label }}</label>{{ sync_target_form.sync_target_path }}<small>{{ sync_target_form.sync_target_path.help_text }}</small></div>
+    <button class="button button-primary" type="submit">Save write-back setting</button>
+  </form>
+  {% if can_edit_rows and issue_page.object_list %}<div class="editable-issue-links"><strong>Rows with import issues can be edited here too:</strong><div>{% for record in issue_page %}<a class="table-link" href="{% url 'source_record_edit' record.id %}">Excel row {{ record.source_row }}</a>{% endfor %}</div></div>{% endif %}
+</section>
+{% endif %}
+{% if workspace_is_owner and can_edit_rows %}<section class="panel event-panel"><div class="panel-heading"><div><p class="eyebrow">OWNER CONTROLS</p><h2>Workbook columns</h2><p class="section-subtitle">Change optional columns in the latest snapshot. Dated status columns stay protected.</p></div><a class="button button-secondary" href="{% url 'column_settings' batch.id %}">Manage columns</a></div></section>{% endif %}
+{% endblock %}

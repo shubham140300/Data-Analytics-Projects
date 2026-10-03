@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Parameters{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">COMPLIANCE CHECKS</p><h1>Parameter workbooks</h1><p class="page-subtitle">Open a parameter to browse every column in its matching master-workbook worksheet. Changes save back to the configured workbook.</p></div>
+<section class="parameter-workbook-grid">
+  {% for parameter in parameters %}
+    <a class="parameter-workbook-card" href="{% url 'parameter_data' parameter.id %}">
+      <span class="parameter-workbook-mark">{{ forloop.counter }}</span>
+      <span class="parameter-workbook-copy"><strong>{{ parameter.name }}</strong><small>{{ parameter.server_count }} current records · {{ parameter.latest_snapshot_date|date:"M Y"|default:"No dated snapshot" }}</small></span>
+      <span class="parameter-workbook-status">{% if parameter.non_compliant_count %}<b class="text-danger">{{ parameter.non_compliant_count }} non-compliant</b>{% else %}<b class="text-success">No non-compliant</b>{% endif %}<small>{% if parameter.can_write %}Read and edit{% else %}Read only{% endif %}</small></span>
+      <span class="parameter-workbook-arrow" aria-hidden="true">↗</span>
+    </a>
+  {% empty %}
+    <section class="panel"><div class="empty-state"><strong>No readable parameters</strong><p>Ask the owner to grant Read access to a parameter.</p></div></section>
+  {% endfor %}
+</section>
+{% endblock %}

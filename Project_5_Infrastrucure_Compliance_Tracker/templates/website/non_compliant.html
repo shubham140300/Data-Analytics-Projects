@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Non-compliant servers{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">NEEDS ATTENTION</p><h1>Non-compliant servers</h1><p class="page-subtitle">Latest known non-compliant server and parameter pairs.</p></div><a class="button button-secondary" href="{% url 'export_non_compliant' %}?q={{ search|urlencode }}&parameter={{ parameter_filter|urlencode }}">↓ Export Excel</a></div>
+<section class="panel">
+  <form class="filter-bar" method="get">
+    <label class="search-field"><span class="sr-only">Search</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ search }}" placeholder="Search host name or IP address"></label>
+    <label><span class="sr-only">Parameter</span><select name="parameter"><option value="">All parameters</option>{% for item in parameters %}<option value="{{ item.id }}" {% if parameter_filter == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+    <label><span class="sr-only">Rows per page</span><select name="page_size"><option value="25" {% if page_size == 25 %}selected{% endif %}>25 per page</option><option value="50" {% if page_size == 50 %}selected{% endif %}>50 per page</option><option value="100" {% if page_size == 100 %}selected{% endif %}>100 per page</option></select></label>
+    <button class="button button-secondary" type="submit">Filter</button>
+  </form>
+  {% if page_obj.object_list %}<div class="table-wrap"><table><thead><tr><th>Host name</th><th>Parameter</th><th>IP address</th><th>Environment</th><th>Latest observed</th><th>Recurring</th></tr></thead><tbody>
+    {% for state in page_obj %}<tr><td><a class="table-link" href="{% url 'server_detail' state.server.id %}">{{ state.server.hostname }}</a></td><td>{{ state.parameter.name }}</td><td>{{ state.server.current_ip|default:"—" }}</td><td>{{ state.server.environment|default:"—" }}</td><td>{{ state.observed_on|date:"d M Y" }}</td><td>{% if state.recurrence_count %}<span class="status-pill status-recurrence">Yes · {{ state.recurrence_count }}</span>{% else %}<span class="quiet-text">No</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div><div class="table-footer"><span>{{ page_obj.paginator.count }} current non-compliant pair{{ page_obj.paginator.count|pluralize }}</span>{% include "website/pagination.html" %}</div>
+  {% else %}<div class="empty-state"><span class="empty-symbol">✓</span><strong>No current non-compliant records</strong><p>Import a new snapshot to refresh this list.</p></div>{% endif %}
+</section>
+{% endblock %}

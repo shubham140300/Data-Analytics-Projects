@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Edit Excel row{% endblock %}
+{% block content %}
+<div class="page-heading heading-row">
+  <div><p class="eyebrow">EDIT WORKBOOK ROW</p><h1>Excel row {{ record.source_row }}</h1><p class="page-subtitle">{{ batch.parameter.name }} snapshot from {{ batch.snapshot_date|date:"d M Y" }}. Fields follow the exact headings in the imported workbook.</p></div>
+  {% if record.server_id %}<a class="button button-secondary" href="{% url 'server_detail' record.server_id %}">Back to server</a>{% else %}<a class="button button-secondary" href="{% url 'import_detail' batch.id %}">Back to import</a>{% endif %}
+</div>
+<div class="notice notice-info"><span class="notice-icon" aria-hidden="true">i</span><div><strong>Changes are saved to the workbook row</strong><p>{% if batch.sync_target_path %}The matching original workbook and the app's saved copy will both be updated.{% else %}The app's saved workbook copy will be updated. You can add the original file path on the import details page to sync that file too.{% endif %} The app records who made the change. A matching Last Updated column is refreshed automatically.</p></div></div>
+<section class="panel source-edit-panel">
+  <form method="post" class="stacked-form source-edit-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-error-box">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+    <div class="source-editor-grid">
+      <div class="form-field actor-field"><label for="{{ form.changed_by.id_for_label }}">{{ form.changed_by.label }}<span class="required-mark">*</span></label>{{ form.changed_by }}{% if form.changed_by.help_text %}<small>{{ form.changed_by.help_text }}</small>{% endif %}{% for error in form.changed_by.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% for field in form.source_fields %}
+        <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-mark">*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% endfor %}
+    </div>
+    {% if form.managed_columns %}<div class="managed-columns"><strong>Updated automatically when you save</strong><dl>{% for heading,value in form.managed_columns %}<div><dt>{{ heading }}</dt><dd>{{ value|default:"Will be filled on save" }}</dd></div>{% endfor %}</dl></div>{% endif %}
+    <div class="form-actions"><button class="button button-primary" type="submit">Save row and workbook</button>{% if record.server_id %}<a class="button button-quiet" href="{% url 'server_detail' record.server_id %}">Cancel</a>{% else %}<a class="button button-quiet" href="{% url 'import_detail' batch.id %}">Cancel</a>{% endif %}</div>
+  </form>
+</section>
+{% endblock %}

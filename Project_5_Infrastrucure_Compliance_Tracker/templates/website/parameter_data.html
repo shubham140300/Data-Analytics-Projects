@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ parameter.name }} worksheet{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">MASTER WORKBOOK · {{ sheet_name }}</p><h1>{{ parameter.name }} worksheet</h1><p class="page-subtitle">All columns from the {{ sheet_name }} tab, shown in worksheet order.{% if snapshot %} Latest snapshot: {{ snapshot.snapshot_date|date:"d M Y" }}.{% endif %}</p></div><a class="button button-secondary" href="{% url 'parameters' %}">All parameters</a></div>
+<section class="panel spreadsheet-panel">
+  <div class="spreadsheet-toolbar"><div><strong>{{ page_obj.paginator.count|default:0 }}</strong><span>matching sheet rows</span>{% if can_write %}<span class="spreadsheet-access-tag">Edit access</span>{% else %}<span class="spreadsheet-access-tag readonly-tag">Read only</span>{% endif %}</div><form method="get" class="spreadsheet-search"><label class="visually-hidden" for="sheet-search">Search worksheet</label><input id="sheet-search" name="q" value="{{ search }}" placeholder="Search hostname, IP, status, or any column"><input type="hidden" name="page_size" value="{{ page_size }}"><button class="button button-secondary" type="submit">Search</button>{% if search %}<a class="text-link" href="{% url 'parameter_data' parameter.id %}">Clear</a>{% endif %}</form></div>
+  <div class="spreadsheet-table-wrap"><table class="spreadsheet-table"><thead><tr><th class="row-number-heading">Excel row</th>{% for heading in headers %}<th>{{ heading }}</th>{% endfor %}{% if can_write %}<th class="spreadsheet-action-heading">Action</th>{% endif %}</tr></thead><tbody>
+    {% for row in page_obj %}<tr><th class="row-number-cell">{{ row.source_row }}</th>{% for cell in row.cells %}<td>{% if cell.has_value %}{{ cell.value }}{% else %}<span class="quiet-text">—</span>{% endif %}</td>{% endfor %}{% if can_write %}<td class="spreadsheet-action-cell">{% if row.edit_url %}<a class="button button-small button-secondary" href="{{ row.edit_url }}">Edit row</a>{% else %}<span class="quiet-text">Read only</span>{% endif %}</td>{% endif %}</tr>
+    {% empty %}<tr><td class="spreadsheet-empty" colspan="{{ table_colspan }}">No matching worksheet rows.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% include "website/pagination.html" %}
+</section>
+<p class="spreadsheet-note">Edits are audited and saved to the configured master Excel workbook. Formula-driven cells stay read only; the dashboard refreshes from the saved workbook snapshots.</p>
+{% endblock %}

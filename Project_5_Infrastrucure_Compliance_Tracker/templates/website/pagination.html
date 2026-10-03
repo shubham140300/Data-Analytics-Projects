@@ -1,0 +1,5 @@
+<nav class="pagination" aria-label="Pagination">
+  {% if page_obj.has_previous %}<a href="?q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&environment={{ request.GET.environment|urlencode }}&parameter={{ request.GET.parameter|urlencode }}&recurring={{ request.GET.recurring|urlencode }}&snapshot_date={{ request.GET.snapshot_date|urlencode }}&uploaded_on={{ request.GET.uploaded_on|urlencode }}&page_size={{ page_size }}&page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span class="disabled">Previous</span>{% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&environment={{ request.GET.environment|urlencode }}&parameter={{ request.GET.parameter|urlencode }}&recurring={{ request.GET.recurring|urlencode }}&snapshot_date={{ request.GET.snapshot_date|urlencode }}&uploaded_on={{ request.GET.uploaded_on|urlencode }}&page_size={{ page_size }}&page={{ page_obj.next_page_number }}">Next</a>{% else %}<span class="disabled">Next</span>{% endif %}
+</nav>

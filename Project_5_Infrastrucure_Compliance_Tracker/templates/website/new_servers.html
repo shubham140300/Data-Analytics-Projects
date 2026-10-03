@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}New servers{% endblock %}
+{% block content %}
+<div class="page-heading heading-row">
+  <div><p class="eyebrow">MASTER ROSTER CHANGE</p><h1>New servers</h1><p class="page-subtitle">Hostnames and IP addresses added since the previous master roster.</p></div>
+  <a class="button button-quiet" href="{% url 'dashboard' %}">Back to overview</a>
+</div>
+<section class="panel new-server-panel">
+  <div class="new-server-summary"><div><span>New servers found</span><strong>{% if new_server_count != None %}{{ new_server_count }}{% else %}&mdash;{% endif %}</strong></div><p>{% if master_workbook and new_server_count != None %}Compared with the previous roster of {{ master_workbook.previous_roster_count|default:0 }} servers in <strong>{{ master_workbook.original_filename }}</strong>.{% elif master_workbook %}This workbook is the baseline. The next workbook update will show the new server names and addresses.{% else %}No master workbook has been imported yet.{% endif %}</p></div>
+  {% if new_server_count != None %}
+    <form method="get" class="new-server-search"><label for="new-server-q">Find a hostname or IP address</label><input id="new-server-q" type="search" name="q" value="{{ query }}" placeholder="Search host or IP"><button class="button button-secondary" type="submit">Search</button>{% if query %}<a class="text-link" href="{% url 'new_servers' %}">Clear</a>{% endif %}</form>
+    {% if new_servers.object_list %}
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Hostname</th><th>IP address</th></tr></thead><tbody>
+        {% for server in new_servers %}<tr><td>{{ page_obj.start_index|add:forloop.counter0 }}</td><td><strong>{{ server.hostname }}</strong></td><td>{{ server.ip_address|default:"—" }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="table-footer"><span>{{ total_matches }} matching server{{ total_matches|pluralize }}</span>{% include "website/pagination.html" %}</div>
+    {% elif query %}<div class="empty-state compact"><strong>No matching servers</strong><p>Try another hostname or IP address.</p></div>
+    {% elif new_server_count %}<div class="empty-state compact"><strong>The count is available, but host details are missing</strong><p>Update the master workbook again to save the new host and IP list for future views.</p></div>
+    {% else %}<div class="empty-state compact"><strong>No new servers in this update</strong><p>The latest roster has no hosts that were absent from the previous roster.</p></div>{% endif %}
+  {% else %}<div class="empty-state compact"><strong>No comparison yet</strong><p>After a second master workbook update, the app will list each new hostname and its IP address here.</p></div>{% endif %}
+</section>
+{% endblock %}

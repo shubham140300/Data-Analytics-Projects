@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+uploads/
+.django_secret_key
+staticfiles/

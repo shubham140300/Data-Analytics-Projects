@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="login-shell">
+  <section class="panel login-panel">
+    <p class="eyebrow">TECHCOMPLIANCE WORKSPACE</p>
+    <h1>Sign in to your workspace</h1>
+    <p class="page-subtitle">Use the username and password provided by the workspace owner.</p>
+    <form method="post" class="stacked-form">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <div class="form-field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus></div>
+      <div class="form-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+      {% if error %}<div class="form-error-box">{{ error }}</div>{% endif %}
+      <button type="submit" class="button button-primary">Sign in</button>
+    </form>
+    <p class="login-help">Accounts are approved by the owner. If you are setting up the owner account for the first time, run <code>python manage.py setup_workspace_owner</code> in the project folder.</p>
+  </section>
+</div>
+{% endblock %}

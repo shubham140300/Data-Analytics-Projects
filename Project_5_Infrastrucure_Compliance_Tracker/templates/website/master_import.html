@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Update master workbook{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">MONTHLY MASTER SOURCE</p><h1>Update the master workbook</h1><p class="page-subtitle">Upload the same workbook after adding a month column. The app reads the Splunk history and refreshes its dashboard from the master roster.</p></div>
+<div class="form-layout">
+  <section class="panel form-panel">
+    <form method="post" enctype="multipart/form-data" class="stacked-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error-box">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}
+        <div class="form-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+          {{ field }}
+          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+      <div class="form-actions"><button class="button button-primary" type="submit">Read and update dashboard</button><a class="button button-quiet" href="{% url 'dashboard' %}">Cancel</a></div>
+    </form>
+  </section>
+  <aside class="side-note">
+    <h2>How the monthly update works</h2>
+    <ul>
+      <li>The app reads server names and IPs from <code>Main Data</code>.</li>
+      <li>Dated Splunk status columns become monthly snapshots. Existing history is retained.</li>
+      <li>The six parameter tabs are recognized. Empty tabs show no status until they contain data.</li>
+      <li>“Compliant to Non-Compliant” remains Unmapped, as previously selected.</li>
+      <li>The first upload establishes the server baseline. Later uploads show hosts absent from the previous master roster.</li>
+      <li>Formula-linked names and IPs are read from <code>Main Data</code>; status columns must contain saved values.</li>
+      <li>Macro-enabled files, external links, embedded files, and active controls are rejected. This is not a substitute for antivirus scanning.</li>
+    </ul>
+    {% if master_workbook %}<p class="note-small">Current master: <strong>{{ master_workbook.original_filename }}</strong> · {{ master_workbook.roster_count }} servers in the saved baseline.</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}

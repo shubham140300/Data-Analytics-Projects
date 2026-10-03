@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Servers{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">INVENTORY</p><h1>Servers</h1><p class="page-subtitle">Search hosts and review their latest imported details.</p></div></div>
+<section class="panel">
+  <form class="filter-bar" method="get">
+    <label class="search-field"><span class="sr-only">Search hosts, IP addresses, or parameter names</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ search }}" placeholder="Search host, IP, or check name (e.g. Nmap)"></label>
+    <label><span class="sr-only">Compliance parameter</span><select name="parameter"><option value="">All parameters</option>{% for item in parameters %}<option value="{{ item.id }}" {% if parameter_filter == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+    <label><span class="sr-only">Current status</span><select name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+    <label><span class="sr-only">Environment</span><select name="environment"><option value="">All environments</option>{% for value in environments %}<option value="{{ value }}" {% if environment_filter == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+    <label><span class="sr-only">Rows per page</span><select name="page_size"><option value="25" {% if page_size == 25 %}selected{% endif %}>25 per page</option><option value="50" {% if page_size == 50 %}selected{% endif %}>50 per page</option><option value="100" {% if page_size == 100 %}selected{% endif %}>100 per page</option></select></label>
+    <button class="button button-secondary" type="submit">Search</button>
+  </form>
+  {% if page_obj.object_list %}
+  <div class="table-wrap"><table><thead><tr><th>Host name</th><th>IP address</th><th>Operating system</th><th>Environment</th><th>{% if selected_parameter %}{{ selected_parameter.name }} status{% else %}Current checks{% endif %}</th><th>Last seen</th></tr></thead><tbody>
+    {% for server in page_obj %}<tr><td><a class="table-link" href="{% url 'server_detail' server.id %}">{{ server.hostname }}</a></td><td>{% if server.ip_ambiguous %}Multiple IPs{% else %}{{ server.current_ip|default:"—" }}{% endif %}</td><td>{{ server.operating_system|default:"—" }}</td><td>{{ server.environment|default:"—" }}</td><td>{% if selected_parameter %}{% if server.parameter_state %}<span class="status-pill status-{{ server.parameter_state.status }}">{{ server.parameter_state.get_status_display }}</span>{% else %}<span class="quiet-text">No status</span>{% endif %}{% elif server.non_compliant_count %}<span class="status-pill status-non_compliant">{{ server.non_compliant_count }} non-compliant</span>{% elif server.unmapped_count %}<span class="status-pill status-unmapped">{{ server.unmapped_count }} unmapped</span>{% else %}<span class="quiet-text">{{ server.states.count }} tracked</span>{% endif %}</td><td>{{ server.last_seen_on|date:"d M Y"|default:"—" }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="table-footer"><span>{{ page_obj.paginator.count }} server{{ page_obj.paginator.count|pluralize }}</span>{% include "website/pagination.html" %}</div>
+{% else %}<div class="empty-state"><span class="empty-symbol">⌕</span><strong>No servers found</strong><p>Search checks active hostnames, IP addresses, and the parameters you can read.</p>{% if workspace_is_owner %}<a class="button button-quiet" href="{% url 'imports_master' %}">Update master workbook</a>{% elif workspace_permissions.execute %}<a class="button button-quiet" href="{% url 'imports_new' %}">Import a permitted parameter</a>{% endif %}</div>{% endif %}
+</section>
+{% endblock %}

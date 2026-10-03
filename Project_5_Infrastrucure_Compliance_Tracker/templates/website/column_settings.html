@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Workbook columns{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">OWNER CONSOLE · WORKBOOK SCHEMA</p><h1>Column settings</h1><p class="page-subtitle">{{ batch.parameter.name }} snapshot · {{ batch.snapshot_date|date:"d M Y" }} · {{ batch.source_columns|length }} columns</p></div><a class="button button-secondary" href="{% url 'import_detail' batch.id %}">Back to import</a></div>
+<div class="notice notice-warning"><span class="notice-icon" aria-hidden="true">!</span><div><strong>Changes update the workbook source</strong><p>Optional columns can be added, renamed, or removed. {% if batch.is_master_source %}The master workbook and every saved snapshot for this parameter sheet are updated together.{% else %}Removed columns and their values are deleted from the working workbook and, when configured, the original workbook.{% endif %} Core identity, dated status, and audit columns are locked.</p></div></div>
+<div class="content-grid access-grid">
+  <section class="panel form-panel"><div class="panel-heading"><div><p class="eyebrow">EDIT COLUMNS</p><h2>Change workbook headings</h2></div></div>
+    <form method="post" class="stacked-form">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error-box">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+      {% for field in form %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}
+      <button type="submit" class="button button-primary">Apply column change</button>
+    </form>
+  </section>
+  <aside class="side-note"><h2>Current columns</h2><ul>{% for heading in locked_columns %}<li><strong>{{ heading }}</strong> <span class="quiet-text">Locked core field</span></li>{% endfor %}{% for heading in optional_columns %}<li><strong>{{ heading }}</strong> <span class="quiet-text">Owner editable</span></li>{% endfor %}</ul><p class="note-small">Every update is recorded in the audit history. Dated status headings stay fixed so the monthly comparison remains linked correctly.</p></aside>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Imports{% endblock %}
+{% block content %}
+<div class="page-heading heading-row"><div><p class="eyebrow">SNAPSHOT HISTORY</p><h1>Imports</h1><p class="page-subtitle">Each workbook is kept as a separate import event with its source rows.</p></div>{% if workspace_permissions.execute %}<div class="heading-actions">{% if workspace_is_owner %}<a class="button button-quiet" href="{% url 'imports_master' %}">Update master workbook</a>{% endif %}<a class="button button-primary" href="{% url 'imports_new' %}"><span aria-hidden="true">＋</span> Import snapshot</a></div>{% endif %}</div>
+<section class="panel">
+  <form class="filter-bar" method="get">
+    <label class="search-field"><span class="sr-only">Search imports</span><span aria-hidden="true">⌕</span><input type="search" name="q" value="{{ search }}" placeholder="Search file or parameter"></label>
+    <label><span class="sr-only">Parameter</span><select name="parameter"><option value="">All parameters</option>{% for item in parameters %}<option value="{{ item.id }}" {% if parameter_filter == item.id|stringformat:"s" %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+    <label>Snapshot date <input type="date" name="snapshot_date" value="{{ snapshot_filter }}"></label>
+    <label>Uploaded on <input type="date" name="uploaded_on" value="{{ uploaded_filter }}"></label>
+    <label><span class="sr-only">Rows per page</span><select name="page_size"><option value="25" {% if page_size == 25 %}selected{% endif %}>25 per page</option><option value="50" {% if page_size == 50 %}selected{% endif %}>50 per page</option><option value="100" {% if page_size == 100 %}selected{% endif %}>100 per page</option></select></label>
+    <button class="button button-secondary" type="submit">Filter history</button>
+  </form>
+  {% if workspace_is_owner %}<p class="section-subtitle">Owner controls: deleting an import removes its app snapshot, related status events, and any upload copy no longer used by another import. The original Excel workbook is not changed.</p>{% endif %}
+  {% if page_obj.object_list %}<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Snapshot date</th><th>Imported</th><th>Rows</th><th>Unmapped</th><th>Result</th>{% if workspace_is_owner %}<th>Owner action</th>{% endif %}</tr></thead><tbody>
+    {% for batch in page_obj %}<tr><td><a class="table-link" href="{% url 'import_detail' batch.id %}">{{ batch.parameter.name }}</a><small class="table-subline">{{ batch.original_filename }}</small></td><td>{{ batch.snapshot_date|date:"d M Y" }}</td><td>{{ batch.imported_at|date:"d M Y, H:i" }}</td><td>{{ batch.total_rows }}</td><td>{% if batch.unmapped_status_rows %}<span class="text-warning">{{ batch.unmapped_status_rows }}</span>{% else %}0{% endif %}</td><td><span class="status-pill status-{{ batch.result }}">{{ batch.get_result_display }}</span></td>{% if workspace_is_owner %}<td><details class="row-delete"><summary>Delete</summary><form method="post" action="{% url 'delete_import' batch.id %}">{% csrf_token %}<p>Remove {{ batch.parameter.name }} · {{ batch.snapshot_date|date:"d M Y" }}, its saved app copy, and related imported history? The original Excel workbook stays unchanged.</p><button class="button button-danger" type="submit">Confirm delete</button></form></details></td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div><div class="table-footer"><span>{{ page_obj.paginator.count }} import{{ page_obj.paginator.count|pluralize }}</span>{% include "website/pagination.html" %}</div>
+{% else %}<div class="empty-state"><span class="empty-symbol">↥</span><strong>No imports yet</strong><p>Choose an .xlsx workbook to start tracking current status and history.</p>{% if workspace_is_owner %}<a class="button button-primary" href="{% url 'imports_master' %}">Import the master workbook</a>{% endif %}</div>{% endif %}
+</section>
+{% endblock %}
